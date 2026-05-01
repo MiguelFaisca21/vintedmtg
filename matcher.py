@@ -15,7 +15,11 @@ SET_TOKENS = {
     "mtg", "magic", "the", "gathering", "commander", "modern", "legacy", "pioneer", "standard"
 }
 
-CARD_PHRASE_PATTERN = re.compile(r"\b([A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]+){0,5})\b")
+NOISE_TOKENS = {
+    "card", "cards", "trick", "tricks", "lot", "bundle", "collection", "rare", "mythic", "english", "fr", "es", "pt"
+}
+
+CARD_PHRASE_PATTERN = re.compile(r"\b([A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]+){0,4})\b")
 
 
 @dataclass(slots=True)
@@ -31,8 +35,14 @@ def _clean_phrase(phrase: str) -> str | None:
         return None
     if all(t.lower() in SET_TOKENS for t in filtered):
         return None
+    if any(t.lower().isdigit() for t in filtered):
+        return None
+    if sum(1 for t in filtered if t.lower() in NOISE_TOKENS) >= max(1, len(filtered) // 2):
+        return None
     cleaned = " ".join(filtered).strip()
-    if len(cleaned) < 3:
+    if len(cleaned) < 3 or len(cleaned) > 32:
+        return None
+    if len(cleaned.split()) > 5:
         return None
     return cleaned
 
@@ -63,7 +73,13 @@ def extract_candidate_names(text: str) -> list[str]:
 
 
 def pick_best_names(candidates: Iterable[str], max_names: int = 6) -> list[str]:
-    ranked = sorted(candidates, key=lambda x: (-len(x.split()), -fuzz.ratio(x, x)))
+    ranked = sorted(
+        candidates,
+        key=lambda x: (
+            -min(len(x.split()), 3),
+            -fuzz.partial_ratio(x.lower(), " ".join([w for w in x.lower().split() if w not in NOISE_TOKENS])),
+        ),
+    )
     return ranked[:max_names]
 
 

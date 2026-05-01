@@ -20,6 +20,8 @@ USER_AGENTS = [
 
 class VintedAccessError(RuntimeError):
     """Raised when Vinted blocks API access (403)."""
+
+
 @dataclass(slots=True)
 class VintedItem:
     title: str

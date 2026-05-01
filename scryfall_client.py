@@ -28,7 +28,7 @@ class CardPrice:
 
 
 class ScryfallClient:
-    def __init__(self, session: aiohttp.ClientSession, delay: float = 1.2, retries: int = 3) -> None:
+    def __init__(self, session: aiohttp.ClientSession, delay: float = 1.2, retries: int = 4) -> None:
         self.session = session
         self.delay = delay
         self.retries = retries
@@ -43,21 +43,29 @@ class ScryfallClient:
                 "prices": {"eur": str(cached.eur) if cached.eur is not None else None, "usd": str(cached.usd) if cached.usd is not None else None},
             }
 
-        last_exc: Exception | None = None
         for attempt in range(1, self.retries + 1):
-            headers = {"User-Agent": random.choice(USER_AGENTS)}
+            headers = {"User-Agent": random.choice(USER_AGENTS), "Accept": "application/json"}
             try:
                 async with self.session.get(SCRYFALL_URL, params={"fuzzy": name}, headers=headers, timeout=20) as resp:
                     if resp.status == 404:
                         self.cache[key] = None
                         return None
+                    if resp.status == 429:
+                        retry_after = resp.headers.get("Retry-After")
+                        wait = float(retry_after) if retry_after and retry_after.isdigit() else self.delay * (attempt + 2)
+                        await asyncio.sleep(wait)
+                        continue
+                    if resp.status >= 500:
+                        await asyncio.sleep(self.delay * (attempt + 1))
+                        continue
                     resp.raise_for_status()
-                    data = await resp.json()
-                    return data
-            except Exception as exc:
-                last_exc = exc
-                await asyncio.sleep(self.delay * attempt)
-        raise RuntimeError(f"Failed Scryfall request for {name}") from last_exc
+                    return await resp.json()
+            except asyncio.TimeoutError:
+                await asyncio.sleep(self.delay * (attempt + 1))
+            except aiohttp.ClientError:
+                await asyncio.sleep(self.delay * (attempt + 1))
+        self.cache[key] = None
+        return None
 
     async def get_card_price(self, name: str) -> CardPrice | None:
         key = name.lower().strip()
