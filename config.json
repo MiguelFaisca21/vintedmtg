@@ -1,0 +1,18 @@
+{
+  "search_query": "magic the gathering",
+  "min_discount": 0.5,
+  "max_pages": 5,
+  "per_page": 50,
+  "request_delay_seconds": 1.2,
+  "output_csv": "deals.csv",
+  "output_json": "deals.json",
+  "telegram": {
+    "enabled": false,
+    "bot_token": "",
+    "chat_id": ""
+  },
+  "discord": {
+    "enabled": false,
+    "webhook_url": ""
+  }
+}
