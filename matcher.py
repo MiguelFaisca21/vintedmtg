@@ -19,7 +19,7 @@ NOISE_TOKENS = {
     "card", "cards", "trick", "tricks", "lot", "bundle", "collection", "rare", "mythic", "english", "fr", "es", "pt"
 }
 
-CARD_PHRASE_PATTERN = re.compile(r"\b([A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]+){0,5})\b")
+CARD_PHRASE_PATTERN = re.compile(r"\b([A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]+){0,4})\b")
 
 
 @dataclass(slots=True)
