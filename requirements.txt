@@ -1,0 +1,2 @@
+aiohttp>=3.10.0
+rapidfuzz>=3.9.0
