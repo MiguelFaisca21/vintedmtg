@@ -92,10 +92,7 @@ async def process() -> None:
             if not card_match.cards:
                 continue
 
-            card_prices = []
-            for candidate in card_match.cards:
-                cp = await scryfall.get_card_price(candidate)
-                card_prices.append(cp)
+            card_prices = await asyncio.gather(*[scryfall.get_card_price(c) for c in card_match.cards])
             valid_prices = [cp.market_price for cp in card_prices if cp and cp.market_price]
             if not valid_prices:
                 continue

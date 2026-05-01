@@ -19,7 +19,7 @@ NOISE_TOKENS = {
     "card", "cards", "trick", "tricks", "lot", "bundle", "collection", "rare", "mythic", "english", "fr", "es", "pt"
 }
 
-CARD_PHRASE_PATTERN = re.compile(r"\b([A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]+){0,4})\b")
+CARD_PHRASE_PATTERN = re.compile(r"\b([A-Z][a-zA-Z'\-]+(?:\s+[A-Z][a-zA-Z'\-]+){0,5})\b")
 
 
 @dataclass(slots=True)
@@ -42,7 +42,7 @@ def _clean_phrase(phrase: str) -> str | None:
     cleaned = " ".join(filtered).strip()
     if len(cleaned) < 3 or len(cleaned) > 32:
         return None
-    if len(cleaned.split()) > 4:
+    if len(cleaned.split()) > 5:
         return None
     return cleaned
 
@@ -54,6 +54,7 @@ def extract_candidate_names(text: str) -> list[str]:
         if cleaned:
             candidates.append(cleaned)
 
+    # Add common comma-separated naming style fragments
     for part in re.split(r"[,/|]", text):
         part = part.strip()
         if 3 <= len(part) <= 40 and any(ch.isalpha() for ch in part):
@@ -71,7 +72,7 @@ def extract_candidate_names(text: str) -> list[str]:
     return deduped
 
 
-def pick_best_names(candidates: Iterable[str], max_names: int = 3) -> list[str]:
+def pick_best_names(candidates: Iterable[str], max_names: int = 6) -> list[str]:
     ranked = sorted(
         candidates,
         key=lambda x: (
