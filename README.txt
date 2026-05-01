@@ -16,3 +16,4 @@ Notes
 - Filters fake/proxy/custom and bulk-style listings (multi-language keywords).
 - Uses Scryfall fuzzy name lookup for market value.
 - Optional Telegram/Discord alerts via config.
+- If Vinted returns HTTP 403, your IP/session is likely blocked by anti-bot protections; retry later or from a different network.

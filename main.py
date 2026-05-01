@@ -11,7 +11,7 @@ import aiohttp
 from filters import should_keep_listing
 from matcher import detect_cards
 from scryfall_client import ScryfallClient
-from vinted_client import VintedClient
+from vinted_client import VintedAccessError, VintedClient
 
 
 @dataclass(slots=True)
@@ -71,11 +71,15 @@ async def process() -> None:
         vinted = VintedClient(session, delay=float(config.get("request_delay_seconds", 1.2)))
         scryfall = ScryfallClient(session, delay=float(config.get("request_delay_seconds", 1.2)))
 
-        listings = await vinted.search(
-            query=config.get("search_query", "magic the gathering"),
-            max_pages=int(config.get("max_pages", 5)),
-            per_page=int(config.get("per_page", 50)),
-        )
+        try:
+            listings = await vinted.search(
+                query=config.get("search_query", "magic the gathering"),
+                max_pages=int(config.get("max_pages", 5)),
+                per_page=int(config.get("per_page", 50)),
+            )
+        except VintedAccessError as exc:
+            print(f"Vinted access blocked: {exc}")
+            return
 
         deals: list[Deal] = []
         for item in listings:
